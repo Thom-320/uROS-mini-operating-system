@@ -1,0 +1,27 @@
+name: build
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make gcc-riscv64-unknown-elf qemu-system-misc device-tree-compiler
+      
+      - name: Build kernel
+        run: make
+      
+      - name: Check kernel.elf exists
+        run: |
+          if [ ! -f build/kernel.elf ]; then
+            echo "Error: kernel.elf not generated"
+            exit 1
+          fi
+          echo "✅ Build successful!"
+
