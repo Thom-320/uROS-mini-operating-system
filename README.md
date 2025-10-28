@@ -183,9 +183,9 @@ make gdb
 
 ## 🤝 Colaboradores
 
-- **Thomas** - Scheduler & Benchmark
-- **Simón** - Traps & Timer
-- **María Paula** - Shell & UART & Build
+- **Thomas** 
+- **Simón** 
+- **María Paula** 
 
 ## 📝 Licencia
 
