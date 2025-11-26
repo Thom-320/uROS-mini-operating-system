@@ -21,6 +21,9 @@ halt:
 # x1(ra)=0, x2(sp)=8, x3(gp)=16, x4(tp)=24, x5-x31, sstatus=248, sepc=256
 .align 4
 ctx_switch:
+    # If 'from' (a0) is NULL, skip saving
+    beqz a0, 1f
+
     # Save context to 'from' (a0)
     sd x1,  0(a0)      # ra
     sd x2,  8(a0)      # sp
@@ -54,24 +57,31 @@ ctx_switch:
     sd x30, 232(a0)    # t5
     sd x31, 240(a0)    # t6
     
-    # Save sstatus and sepc
+    # Save CSRs
     csrr t0, sstatus
     sd t0, 248(a0)
     csrr t0, sepc
     sd t0, 256(a0)
-    
+
+1:
+    # Restore CSRs first (using t0 as temp)
+    ld t0, 248(a1)
+    csrw sstatus, t0
+    ld t0, 256(a1)
+    csrw sepc, t0
+
     # Restore context from 'to' (a1)
     ld x1,  0(a1)      # ra
     ld x2,  8(a1)      # sp
     ld x3,  16(a1)     # gp
     ld x4,  24(a1)     # tp
-    ld x5,  32(a1)     # t0
+    ld x5,  32(a1)     # t0 (Restore t0 AFTER using it for CSRs)
     ld x6,  40(a1)     # t1
     ld x7,  48(a1)     # t2
     ld x8,  56(a1)     # s0/fp
     ld x9,  64(a1)     # s1
     ld x10, 72(a1)     # a0
-    ld x11, 80(a1)     # a1
+    # Skip x11 (a1) - restore it LAST
     ld x12, 88(a1)     # a2
     ld x13, 96(a1)     # a3
     ld x14, 104(a1)    # a4
@@ -93,14 +103,10 @@ ctx_switch:
     ld x30, 232(a1)    # t5
     ld x31, 240(a1)    # t6
     
-    # Restore sstatus and sepc
-    ld t0, 248(a1)
-    csrw sstatus, t0
-    ld t0, 256(a1)
-    csrw sepc, t0
+    # Restore a1 LAST (it is the base pointer)
+    ld x11, 80(a1)     # a1
     
     # Ensure SP is 16-byte aligned
     andi sp, sp, -16
     
     ret
-

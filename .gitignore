@@ -1,7 +1,6 @@
 build/
 *.o
 *.map
-*.asm
 virt.dtb
 virt.dts
 .DS_Store

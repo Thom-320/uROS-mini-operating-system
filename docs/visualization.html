@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>uROS Scheduler Visualization</title>
+    <style>
+      :root {
+        --primary: #3b82f6;
+        --secondary: #10b981;
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #f8fafc;
+      }
+      body {
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 2rem;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      h1,
+      h2 {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      .controls {
+        background: var(--card);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+      }
+      button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: opacity 0.2s;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      button.secondary {
+        background: var(--secondary);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+      .panel {
+        background: var(--card);
+        padding: 1.5rem;
+        border-radius: 1rem;
+      }
+      .gantt-chart {
+        display: flex;
+        height: 60px;
+        background: #334155;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        margin: 1rem 0;
+        position: relative;
+      }
+      .block {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: white;
+        transition: width 0.3s ease;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+        text-align: center;
+      }
+      .stat-box {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+      .stat-label {
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
+      input[type="number"] {
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        border: 1px solid #475569;
+        background: #334155;
+        color: white;
+        width: 60px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>uROS Scheduler Visualization</h1>
+
+      <div class="controls">
+        <div>
+          <label>Task 1 Burst:</label>
+          <input type="number" id="t1" value="10" min="1" max="50" />
+        </div>
+        <div>
+          <label>Task 2 Burst:</label>
+          <input type="number" id="t2" value="20" min="1" max="50" />
+        </div>
+        <div>
+          <label>Task 3 Burst:</label>
+          <input type="number" id="t3" value="15" min="1" max="50" />
+        </div>
+        <div>
+          <label>Quantum (RR):</label>
+          <input type="number" id="quantum" value="5" min="1" max="20" />
+        </div>
+        <button onclick="simulate()">Run Simulation</button>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>Round Robin (Preemptive)</h2>
+          <div id="rr-chart" class="gantt-chart"></div>
+          <div class="stats">
+            <div class="stat-box">
+              <div class="stat-value" id="rr-wait">0</div>
+              <div class="stat-label">Avg Wait Time</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="rr-turn">0</div>
+              <div class="stat-label">Avg Turnaround</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="rr-switches">0</div>
+              <div class="stat-label">Context Switches</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Shortest Job First (Non-Preemptive)</h2>
+          <div id="sjf-chart" class="gantt-chart"></div>
+          <div class="stats">
+            <div class="stat-box">
+              <div class="stat-value" id="sjf-wait">0</div>
+              <div class="stat-label">Avg Wait Time</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="sjf-turn">0</div>
+              <div class="stat-label">Avg Turnaround</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="sjf-switches">0</div>
+              <div class="stat-label">Context Switches</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const colors = ["#ef4444", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6"];
+
+      function simulate() {
+        const tasks = [
+          { id: 1, burst: parseInt(document.getElementById("t1").value) },
+          { id: 2, burst: parseInt(document.getElementById("t2").value) },
+          { id: 3, burst: parseInt(document.getElementById("t3").value) },
+        ];
+        const quantum = parseInt(document.getElementById("quantum").value);
+
+        runRR(JSON.parse(JSON.stringify(tasks)), quantum);
+        runSJF(JSON.parse(JSON.stringify(tasks)));
+      }
+
+      function runRR(tasks, quantum) {
+        let time = 0;
+        let queue = [...tasks];
+        let timeline = [];
+        let completed = [];
+        let switches = 0;
+
+        // Initialize state
+        tasks.forEach((t) => {
+          t.remaining = t.burst;
+          t.arrival = 0;
+          t.wait = 0;
+        });
+
+        let lastTask = -1;
+
+        while (queue.length > 0) {
+          let task = queue.shift();
+
+          if (lastTask !== -1 && lastTask !== task.id) switches++;
+          lastTask = task.id;
+
+          let runTime = Math.min(task.remaining, quantum);
+          timeline.push({ id: task.id, duration: runTime, start: time });
+
+          time += runTime;
+          task.remaining -= runTime;
+
+          // Update wait time for others in queue
+          queue.forEach((t) => (t.wait += runTime));
+
+          if (task.remaining > 0) {
+            queue.push(task);
+          } else {
+            task.finish = time;
+            task.turnaround = task.finish - task.arrival;
+            // Wait time calculation in RR is complex iteratively,
+            // simpler: Turnaround - Burst
+            task.waitTotal = task.turnaround - task.burst;
+            completed.push(task);
+          }
+        }
+
+        renderChart("rr-chart", timeline, time);
+        updateStats("rr", completed, switches);
+      }
+
+      function runSJF(tasks) {
+        let time = 0;
+        let available = [...tasks];
+        let timeline = [];
+        let completed = [];
+        let switches = 0;
+
+        // Sort by burst time
+        available.sort((a, b) => a.burst - b.burst);
+
+        available.forEach((task, index) => {
+          if (index > 0) switches++;
+
+          timeline.push({ id: task.id, duration: task.burst, start: time });
+
+          // Wait time is current time (since all arrive at 0)
+          task.waitTotal = time;
+          time += task.burst;
+          task.turnaround = time;
+
+          completed.push(task);
+        });
+
+        renderChart("sjf-chart", timeline, time);
+        updateStats("sjf", completed, switches);
+      }
+
+      function renderChart(elementId, timeline, totalTime) {
+        const container = document.getElementById(elementId);
+        container.innerHTML = "";
+
+        timeline.forEach((block) => {
+          const div = document.createElement("div");
+          div.className = "block";
+          div.style.width = (block.duration / totalTime) * 100 + "%";
+          div.style.backgroundColor = colors[(block.id - 1) % colors.length];
+          div.textContent = `P${block.id}`;
+          div.title = `P${block.id}: ${block.duration} ticks`;
+          container.appendChild(div);
+        });
+      }
+
+      function updateStats(prefix, tasks, switches) {
+        const avgWait =
+          tasks.reduce((acc, t) => acc + t.waitTotal, 0) / tasks.length;
+        const avgTurn =
+          tasks.reduce((acc, t) => acc + t.turnaround, 0) / tasks.length;
+
+        document.getElementById(`${prefix}-wait`).textContent =
+          avgWait.toFixed(1);
+        document.getElementById(`${prefix}-turn`).textContent =
+          avgTurn.toFixed(1);
+        document.getElementById(`${prefix}-switches`).textContent = switches;
+      }
+
+      // Initial run
+      simulate();
+    </script>
+  </body>
+</html>

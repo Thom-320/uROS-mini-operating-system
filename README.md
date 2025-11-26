@@ -59,17 +59,17 @@ Ejecuta automáticamente: `help` → `ps` → `run cpu` → `run io` → `ps` �
 
 ## 📋 Comandos Disponibles
 
-| Comando | Descripción |
-|---------|-------------|
-| `help` | Lista todos los comandos |
-| `ps` | Muestra tareas activas |
-| `run cpu` | Crea tarea CPU-bound |
-| `run io` | Crea tarea I/O-bound |
-| `kill <pid>` | Termina una tarea |
-| `sched rr` | Scheduler Round-Robin |
-| `bench` | Benchmark (requiere timer) |
-| `uptime` | Tiempo de ejecución |
-| `meminfo` | Uso de memoria |
+| Comando      | Descripción                |
+| ------------ | -------------------------- |
+| `help`       | Lista todos los comandos   |
+| `ps`         | Muestra tareas activas     |
+| `run cpu`    | Crea tarea CPU-bound       |
+| `run io`     | Crea tarea I/O-bound       |
+| `kill <pid>` | Termina una tarea          |
+| `sched rr`   | Scheduler Round-Robin      |
+| `bench`      | Benchmark (requiere timer) |
+| `uptime`     | Tiempo de ejecución        |
+| `meminfo`    | Uso de memoria             |
 
 ## 📁 Estructura
 
@@ -169,17 +169,21 @@ make gdb
 ## ✅ Estado del Proyecto
 
 **Completamente funcional:**
+
 - ✅ Boot y shell interactiva
 - ✅ Sistema de tareas con context switching
-- ✅ Scheduler Round-Robin cooperativo
-- ✅ Todos los comandos básicos
+- ✅ Scheduler Round-Robin Preemptivo (con Timer)
+- ✅ Scheduler SJF (Shortest Job First)
+- ✅ Todos los comandos básicos + `bench`
 - ✅ UART input/output
 - ✅ Gestión de memoria
+- ✅ Visualización Web (ver `docs/visualization.html`)
 
 **Limitaciones actuales (por diseño):**
-- Timer deshabilitado para estabilidad
-- Sistema cooperativo (sin preemption automática)
-- `bench` y `sched sjf` requieren timer
+
+- Sin MMU (memoria física directa)
+- Sin sistema de archivos (todo en RAM)
+- Modo Supervisor único (sin separación User/Kernel estricta)
 
 ## 🤝 Colaboradores
 
@@ -196,4 +200,3 @@ MIT License - ver archivo LICENSE
 **🚀 ¡Listo para demostración y evaluación!**
 
 Para más detalles, consulta [GUIA_COMPLETA.md](GUIA_COMPLETA.md)
-
