@@ -1,21 +1,14 @@
+# Build artifacts
 build/
 *.o
-*.map
-virt.dtb
-virt.dts
-.DS_Store
-.vscode/
-.idea/
-.venv/
-build/
-*.o
+*.elf
 *.map
 *.asm
-virt.dtb
-virt.dts
-.DS_Store
-*.swp
-*~
+*.bin
+
+# Documentation binaries
+*.pdf
+
+# Editor files
 .vscode/
-.idea/
-.venv/
+.DS_Store

@@ -66,6 +66,7 @@ static pcb_t *sched_pick_next_sjf(void) {
 
   // Find task with minimum burst estimate
   int best_idx = -1;
+  int best_offset = -1;
   u64 min_burst = ~0UL;
 
   for (int i = 0; i < ready_count; i++) {
@@ -78,6 +79,7 @@ static pcb_t *sched_pick_next_sjf(void) {
           task->arrival_time < ready_queue[best_idx]->arrival_time))) {
       min_burst = task->burst_estimate;
       best_idx = idx;
+      best_offset = i;
     }
   }
 
@@ -89,9 +91,10 @@ static pcb_t *sched_pick_next_sjf(void) {
   pcb_t *task = ready_queue[best_idx];
 
   // Shift queue to remove the selected task
-  for (int i = 0; i < ready_count - 1; i++) {
-    int src_idx = (best_idx + 1 + i) % MAX_TASKS;
-    int dst_idx = (best_idx + i) % MAX_TASKS;
+  // We only shift elements AFTER the removed task
+  for (int i = best_offset; i < ready_count - 1; i++) {
+    int dst_idx = (ready_head + i) % MAX_TASKS;
+    int src_idx = (ready_head + i + 1) % MAX_TASKS;
     ready_queue[dst_idx] = ready_queue[src_idx];
   }
 

@@ -81,10 +81,10 @@ int task_create(void (*entry)(void *), void *arg, int burst_hint) {
   task->context.x10 = (u64)arg;                 // a0 (first argument)
 
   // Set sstatus: enable interrupts when task runs
-  // Set sstatus: enable interrupts when task runs
-  // SPP=1 (S-mode return), SPIE=1 (Previous IE)
-  // We do NOT set SIE here; sret copies SPIE to SIE.
-  task->context.sstatus = 0x00000120;
+  // SPP=1 (S-mode return), SPIE=1 (Previous IE), SIE=1 (Enable interrupts
+  // immediately) We set SIE=1 because ctx_switch restores sstatus directly via
+  // csrw, not sret.
+  task->context.sstatus = 0x00000122;
 
   // Add to scheduler
   task->state = TASK_READY;
